@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Appointment System</title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
+    <script type="text/javascript">
+        jQuery.support.cors = true;
+        
+        $(document).ready(function() {
+
+            var appointmentViewModel = function() {
+                var self = this;
+
+                self.name = ko.observable("");
+                self.age = ko.observable("");
+                self.doctor = ko.observable("");
+                self.email = ko.observable("");
+                self.time = ko.observable("");
+
+                self.SuccessMessage = ko.observable("");
+
+                self.bookAppointment = function () {              
+                    var appointment = {
+                        name: self.name(),
+                        age: self.age(),
+                        doctor: self.doctor(),
+                        email: self.email(),
+                        time: self.time()
+                    };
+
+                    $.ajax({
+                        crossDomain: true,
+                        url: 'https://4rog3ooec9.execute-api.us-east-1.amazonaws.com/Dev/Patients', // Replace with your API Gateway endpoint
+                        cache: false,
+                        type: 'POST', 
+                        data: ko.toJSON(appointment),
+                        success: function (data) {              
+                            self.SuccessMessage(data);
+                            self.name('');
+                            self.age('');
+                            self.doctor('');
+                            self.email('');
+                            self.time('');
+                        },
+                        error: function(xhr, textStatus, err) {
+                            alert("Error happened: " + err);
+                        }
+                    });
+                };
+            };
+
+            var viewModel = new appointmentViewModel();
+            ko.applyBindings(viewModel);
+        });
+    </script>
+</head>
+<body>
+    <center>
+        <h2>Patient Appointment System</h2>
+
+        <table>
+            <tr>
+                <td>
+                    <div>
+                        <p>Name:</p>
+                        <input type="text" data-bind='value: name' required/><br><br>
+
+                        <p>Age:</p>
+                        <input type="number" data-bind='value: age' required/><br><br>
+
+                        <p>Choose Doctor:</p>
+                        <select data-bind='value: doctor' required>
+                            <option value="">Select Doctor</option>
+                            <option value="Dr. Smith">Dr. Smith</option>
+                            <option value="Dr. Johnson">Dr. Johnson</option>
+                            <option value="Dr. Williams">Dr. Williams</option>
+                        </select><br><br>
+
+                        <p>Email:</p>
+                        <input type="email" data-bind='value: email' required/><br><br>
+
+                        <p>Select Time:</p>
+                        <input type="datetime-local" data-bind='value: time' required/><br><br>
+                    </div>
+                    <span style="color: darkolivegreen" data-bind='text: SuccessMessage'></span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div>
+                        <button data-bind="click: $root.bookAppointment">Book Appointment</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

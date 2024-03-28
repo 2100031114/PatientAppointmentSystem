@@ -1,0 +1,65 @@
+const AWS = require("aws-sdk");
+const ses = new AWS.SES({ region: "us-east-1" }); // Replace "YOUR_REGION" with your AWS region
+const docClient = new AWS.DynamoDB.DocumentClient();
+
+exports.handler = (event, context, callback) => {
+    const tableName = "patient";
+    const params = {
+        TableName: tableName,
+        Item: {
+            "name": event.name, // Assuming "name" is the primary key for your table
+            "age": event.age,
+            "doctor": event.doctor,
+            "email": event.email,
+            "time": event.time
+        }
+    };
+    
+
+    docClient.put(params, function (err, data) {
+        if (err) {
+            callback(err, data);
+        } else {
+            // Send email
+            sendEmail(event.name, event.email, event.doctor, event.time);
+            
+            callback(null, "Successfully added patient and sent email");
+        }
+    });
+};
+
+function sendEmail(name, email, doctor, time) {
+    const subject = "Appointment Confirmation";
+    const message = `Dear ${name},
+
+Your appointment with Dr. ${doctor} at ${time} has been successfully scheduled.
+
+Please let us know if you have any questions or need to reschedule.
+
+Regards,
+Your Healthcare Team`;
+
+    const params = {
+        Destination: {
+            ToAddresses: [email]
+        },
+        Message: {
+            Body: {
+                Text: {
+                    Charset: "UTF-8",
+                    Data: message
+                }
+            },
+            Subject: {
+                Charset: "UTF-8",
+                Data: subject
+            }
+        },
+        Source: "yaswithareddy1403@gmail.com" // Replace with your sender email address
+    };
+
+    ses.sendEmail(params, function (err, data) {
+        if (err) console.log(err, err.stack);
+        else console.log("Email sent successfully:", data);
+    });
+}
